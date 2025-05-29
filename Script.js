@@ -5,7 +5,7 @@
 // Function to initialize the spreadsheet with sample data
 function initializeSpreadsheet() {
   try {
-    const ss = SpreadsheetApp.openById('1ZjLX7Rwbsn9MC6PkJLvx0qE-3DylsxHAfXOPRYjcFqU');
+    const ss = SpreadsheetApp.openById('14XwCMLNYYllVSRdl1jqzU48H2ilFbAFgFuhbtuKHLbc');
     let sheet = ss.getSheetByName('StockData');
     
     // Create the sheet if it doesn't exist
