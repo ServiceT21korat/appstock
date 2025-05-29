@@ -8,6 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
+     body { background-color: #f0f8ff; color: #333; font-family: Arial, sans-serif; text-align: center; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+    </style>
+    <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
         
         body {
@@ -255,10 +259,10 @@
         const currentTimeElement = document.getElementById('currentTime');
         
         // Google Sheet API endpoint
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyWky_U0q4bpiUccL3nUJBQQsj7_xQbVvut1-XK3NT2BC07PKQzBN3rgz4XIIC4okGtag/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwjTU82IN4oZCymJ3jKTvF7631u61ZS5o6uBNUYqaW0n4bHq95EK5iIw0-QEluOdwHT_w/exec';
 
        function fetchStockData() {
-        fetch("https://script.google.com/macros/s/AKfycbyWky_U0q4bpiUccL3nUJBQQsj7_xQbVvut1-XK3NT2BC07PKQzBN3rgz4XIIC4okGtag/exec")
+        fetch("https://script.google.com/macros/s/AKfycbwjTU82IN4oZCymJ3jKTvF7631u61ZS5o6uBNUYqaW0n4bHq95EK5iIw0-QEluOdwHT_w/exec")
         .then(response => response.json())
         .then(data => console.log(data));
        }
@@ -279,31 +283,31 @@
         let historyDataCache = [];
         
         // Mock data for testing (will be replaced with actual API calls)
-       //const mockMaterials = [
-        //    { code: 'M001', name: 'กระดาษ A4', stock: 30 },
-        //    { code: 'M002', name: 'ปากกาลูกลื่น', stock: 70 },
-        //    { code: 'M003', name: 'แฟ้มเอกสาร', stock: 27 },
-       //     { code: 'M004', name: 'ลวดเย็บกระดาษ', stock: 35 },
-       //     { code: 'M005', name: 'คลิปหนีบกระดาษ', stock: 45 },
-        //    { code: 'M006', name: 'กรรไกร', stock: 13 },
-        //    { code: 'M007', name: 'เทปกาว', stock: 20 },
-        //    { code: 'M008', name: 'ยางลบ', stock: 45 },
-        //    { code: 'M009', name: 'ดินสอ', stock: 80 },
-        //    { code: 'M010', name: 'ไม้บรรทัด', stock: 20 }
-        //];
+       const mockMaterials = [
+         { code: 'M001', name: 'กระดาษ A4', stock: 30 },
+         { code: 'M002', name: 'ปากกาลูกลื่น', stock: 70 },
+         { code: 'M003', name: 'แฟ้มเอกสาร', stock: 27 },
+         { code: 'M004', name: 'ลวดเย็บกระดาษ', stock: 35 },
+         { code: 'M005', name: 'คลิปหนีบกระดาษ', stock: 45 },
+         { code: 'M006', name: 'กรรไกร', stock: 13 },
+         { code: 'M007', name: 'เทปกาว', stock: 20 },
+         { code: 'M008', name: 'ยางลบ', stock: 45 },
+         { code: 'M009', name: 'ดินสอ', stock: 80 },
+         { code: 'M010', name: 'ไม้บรรทัด', stock: 20 }
+        ];
         
-        //const mockHistory = [
-         //   { date: '2023-06-05', code: 'M001', name: 'กระดาษ A4', quantity: 5 },
-         //   { date: '2023-06-06', code: 'M002', name: 'ปากกาลูกลื่น', quantity: 10 },
-         //   { date: '2023-06-07', code: 'M003', name: 'แฟ้มเอกสาร', quantity: 3 },
-         //   { date: '2023-06-10', code: 'M001', name: 'กระดาษ A4', quantity: 10 },
-         //   { date: '2023-06-12', code: 'M004', name: 'ลวดเย็บกระดาษ', quantity: 5 },
-          //  { date: '2023-06-15', code: 'M005', name: 'คลิปหนีบกระดาษ', quantity: 15 },
-           // { date: '2023-06-18', code: 'M002', name: 'ปากกาลูกลื่น', quantity: 20 },
-          //  { date: '2023-06-20', code: 'M006', name: 'กรรไกร', quantity: 2 },
-          //  { date: '2023-06-22', code: 'M007', name: 'เทปกาว', quantity: 5 },
-          //  { date: '2023-06-25', code: 'M001', name: 'กระดาษ A4', quantity: 5 }
-       // ];
+        const mockHistory = [
+            { date: '2023-06-05', code: 'M001', name: 'กระดาษ A4', quantity: 5 },
+            { date: '2023-06-06', code: 'M002', name: 'ปากกาลูกลื่น', quantity: 10 },
+            { date: '2023-06-07', code: 'M003', name: 'แฟ้มเอกสาร', quantity: 3 },
+            { date: '2023-06-10', code: 'M001', name: 'กระดาษ A4', quantity: 10 },
+            { date: '2023-06-12', code: 'M004', name: 'ลวดเย็บกระดาษ', quantity: 5 },
+            { date: '2023-06-15', code: 'M005', name: 'คลิปหนีบกระดาษ', quantity: 15 },
+            { date: '2023-06-18', code: 'M002', name: 'ปากกาลูกลื่น', quantity: 20 },
+            { date: '2023-06-20', code: 'M006', name: 'กรรไกร', quantity: 2 },
+            { date: '2023-06-22', code: 'M007', name: 'เทปกาว', quantity: 5 },
+            { date: '2023-06-25', code: 'M001', name: 'กระดาษ A4', quantity: 5 }
+        ];
         
         // Fetch material data from Google Sheet
         async function fetchMaterialData() {
