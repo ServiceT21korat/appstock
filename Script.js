@@ -2,6 +2,178 @@
  // return Utilities.formatDate(new Date(date), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 //}
 
+const SHEET_ID = '14XwCMLNYYllVSRdl1jqzU48H2ilFbAFgFuhbtuKHLbc';
+const SHEET_NAME = 'StockData';
+const HISTORY_SHEET = 'RequisitionLog';
+
+// ช่วยตั้งค่า Header สำหรับ CORS
+function setCorsHeaders(output) {
+  return output
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader("Access-Control-Allow-Origin", "*")
+    .setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
+
+// GET → ใช้ดึงข้อมูลวัสดุทั้งหมด
+function getMaterials() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  const rows = sheet.getDataRange().getValues();
+  const materials = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    materials.push({
+      code: rows[i][0],
+      name: rows[i][1],
+      type: rows[i][2],
+      stock: Number(rows[i][3]),
+      unit: rows[i][4],
+      reorder_point: Number(rows[i][5])
+    });
+  }
+
+  return setCorsHeaders(ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    materials: materials
+  })));
+}
+
+// GET → ใช้ดึงประวัติการเบิก
+function getHistory() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(HISTORY_SHEET);
+  const rows = sheet.getDataRange().getValues();
+  const history = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    history.push({
+      code: rows[i][0],
+      name: rows[i][1],
+      qty: Number(rows[i][2]),
+      date: rows[i][3],
+      user: rows[i][4] || ""
+    });
+  }
+
+  return setCorsHeaders(ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    history: history
+  })));
+}
+
+// POST → ใช้เบิกของ และบันทึกใน History
+function processRequisition(data) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const stockSheet = ss.getSheetByName(SHEET_NAME);
+  const historySheet = ss.getSheetByName(HISTORY_SHEET);
+
+  const code = data.code;
+  const qty = Number(data.qty);
+  const user = data.user || "ไม่ระบุ";
+
+  const stockData = stockSheet.getDataRange().getValues();
+  for (let i = 1; i < stockData.length; i++) {
+    if (stockData[i][0] === code) {
+      let currentQty = Number(stockData[i][3]);
+      if (currentQty >= qty) {
+        const newQty = currentQty - qty;
+        stockSheet.getRange(i + 1, 4).setValue(newQty);
+        stockSheet.getRange(i + 1, 7).setValue(new Date()); // คอลัมน์วันที่ล่าสุด
+        const name = stockData[i][1];
+
+        // บันทึกประวัติ
+        historySheet.appendRow([code, name, qty, new Date(), user]);
+
+        return setCorsHeaders(ContentService.createTextOutput(JSON.stringify({
+          status: "success",
+          message: `เบิก ${qty} หน่วยสำเร็จ`
+        })));
+      } else {
+        return setCorsHeaders(ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "จำนวนในคลังไม่พอ"
+        })));
+      }
+    }
+  }
+
+  return setCorsHeaders(ContentService.createTextOutput(JSON.stringify({
+    status: "error",
+    message: "ไม่พบรหัสวัสดุ"
+  })));
+}
+
+// รองรับ GET
+function doGet(e) {
+  const action = e.parameter.action;
+
+  if (action === "getMaterials") return getMaterials();
+  if (action === "getHistory") return getHistory();
+
+  return setCorsHeaders(ContentService.createTextOutput(JSON.stringify({
+    status: "error",
+    message: "Invalid GET action"
+  })));
+}
+
+// รองรับ POST
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (data.action === "requisition") {
+      return processRequisition(data);
+    } else {
+      return setCorsHeaders(ContentService.createTextOutput(JSON.stringify({
+        status: "error",
+        message: "Invalid POST action"
+      })));
+    }
+  } catch (err) {
+    return setCorsHeaders(ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: err.toString()
+    })));
+  }
+}
+
+
+function doPost(e) {
+  if (!e || !e.postData || !e.postData.contents) {
+    return ContentService.createTextOutput("Error: No data received").setMimeType(ContentService.MimeType.TEXT);
+  }
+
+  var data = JSON.parse(e.postData.contents);
+  var sheetStock = SpreadsheetApp.openById("14XwCMLNYYllVSRdl1jqzU48H2ilFbAFgFuhbtuKHLbc").getSheetByName("StockData");
+  var sheetLog = SpreadsheetApp.openById("14XwCMLNYYllVSRdl1jqzU48H2ilFbAFgFuhbtuKHLbc").getSheetByName("RequisitionLog");
+
+  // อัปเดต StockData
+  sheetStock.appendRow([data.qrCode, data.materialCode, data.materialName, data.stockQty, data.remainingQty]);
+
+  // บันทึกข้อมูลใบงานไปยัง RequisitionLog
+  sheetLog.appendRow([data.workOrderNo, data.qrCode, data.materialCode, data.materialName, data.requisitionQty, new Date()]);
+
+  return ContentService.createTextOutput("Data Saved Successfully").setMimeType(ContentService.MimeType.TEXT);
+}
+
+function doGet(e) {
+  var sheet = SpreadsheetApp.openById("14XwCMLNYYllVSRdl1jqzU48H2ilFbAFgFuhbtuKHLbc").getSheetByName("StockData");
+  var data = sheet.getDataRange().getValues();
+  
+  var jsonData = [];
+  for (var i = 1; i < data.length; i++) {
+    jsonData.push({
+      qrCode: data[i][0],
+      materialCode: data[i][1],
+      materialName: data[i][2],
+      stockQty: data[i][3],
+      remainingQty: data[i][4]
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(jsonData))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+
 // Function to initialize the spreadsheet with sample data
 function initializeSpreadsheet() {
   try {
